@@ -1,44 +1,77 @@
 package com.bookstore.daoimpl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.TypeReference;
 import com.bookstore.dao.BookDao;
 import com.bookstore.entity.Book;
+import com.bookstore.entity.HomeItem;
 import com.bookstore.repository.BookRepository;
+import com.bookstore.utils.redisUtils.RedisUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
+@Slf4j
 public class BookDaoImpl implements BookDao {
 
   BookRepository bookRepository;
+  RedisUtil redisUtil;
 
   @Autowired
   void setBookRepository(BookRepository bookRepository) {
     this.bookRepository = bookRepository;
   }
 
+  @Autowired
+  void setRedisUtil(RedisUtil redisUtil) {
+    this.redisUtil = redisUtil;
+  }
+
   @Override
   public List<Book> getBooks() {
-    System.out.println("getBooks dao executed.");
-    List<Book> bookList = bookRepository.getBooks();
-    return bookList;
+    Object p = redisUtil.get("bookList");
+    List<Book> res = null;
+    if (p == null) {
+      log.info("Get bookList from database.");
+      res = bookRepository.getBooks();
+      redisUtil.set("bookList", JSONArray.toJSON(res));
+    } else {
+      log.info("Get bookList from Redis.");
+      res = JSONArray.parseObject(p.toString(), new TypeReference<List<Book>>() {
+      });
+    }
+    return res;
   }
 
   @Override
   public Book getBookByBookId(Integer bookId) {
-    System.out.println("getBookByBookId dao executed.");
-    return bookRepository.getBookByBookId(bookId);
+    Object p = redisUtil.get("book-" + bookId);
+    Book res = null;
+    if (p == null) {
+      log.info("Get book-" + bookId + " from database.");
+      res = bookRepository.getBookByBookId(bookId);
+      redisUtil.set("book-" + bookId, JSONArray.toJSON(res));
+    } else {
+      log.info("Get book-" + bookId + " from Redis.");
+      res = JSONArray.parseObject(p.toString(), new TypeReference<Book>() {
+      });
+    }
+    return res;
   }
 
   @Override
   public void deleteBookByBookId(Integer bookId) {
     bookRepository.deleteBookByBookId(bookId);
+    deleteBookCache(bookId);
   }
 
   @Override
@@ -67,69 +100,105 @@ public class BookDaoImpl implements BookDao {
     Integer inventory = new Integer(params.get("inventory"));
 
     bookRepository.addBook(name, author, price, isbn, inventory, description, image, type, brief);
+    deleteBookCache(-1);
   }
 
   @Override
   public List<Book> getBookByName(String name) {
-    return bookRepository.getBookByName("%"+name+"%");
+    return bookRepository.getBookByName("%" + name + "%");
   }
 
   @Override
-  public void updateBook(Map<String,String> params) {
-    Integer bookId= Integer.valueOf(params.get("bookId"));
-    if(bookId==null || bookId<=0) return;
+  public void updateBook(Map<String, String> params) {
+    Integer bookId = Integer.valueOf(params.get("bookId"));
+    if (bookId == null || bookId <= 0) {
+      return;
+    }
 
     String name = params.get("name");
-    if(name!=null) bookRepository.modifyName(bookId,name);
+    if (name != null) {
+      bookRepository.modifyName(bookId, name);
+    }
 
     String author = params.get("author");
-    if(author!=null) bookRepository.modifyAuthor(bookId,author);
+    if (author != null) {
+      bookRepository.modifyAuthor(bookId, author);
+    }
 
     String isbn = params.get("isbn");
-    if(isbn!=null) bookRepository.modifyISBN(bookId,isbn);
+    if (isbn != null) {
+      bookRepository.modifyISBN(bookId, isbn);
+    }
 
     String description = params.get("description");
-    if(description!=null) bookRepository.modifyDescription(bookId,description);
+    if (description != null) {
+      bookRepository.modifyDescription(bookId, description);
+    }
 
     String image = params.get("image");
-    if(image!=null) bookRepository.modifyImage(bookId,image);
+    if (image != null) {
+      bookRepository.modifyImage(bookId, image);
+    }
 
     String type = params.get("type");
-    if(type!=null) bookRepository.modifyType(bookId,type);
+    if (type != null) {
+      bookRepository.modifyType(bookId, type);
+    }
 
     String brief = params.get("brief");
-    if(brief!=null) bookRepository.modifyBrief(bookId,brief);
+    if (brief != null) {
+      bookRepository.modifyBrief(bookId, brief);
+    }
 
     BigDecimal price = new BigDecimal(params.get("price"));
     price = price.setScale(2, BigDecimal.ROUND_HALF_UP);  //保留两位，四舍五入
-    if(price.compareTo(BigDecimal.ZERO)>0) bookRepository.modifyPrice(bookId,price);
+    if (price.compareTo(BigDecimal.ZERO) > 0) {
+      bookRepository.modifyPrice(bookId, price);
+    }
 
     Integer inventory = new Integer(params.get("inventory"));
-    if(inventory>0) bookRepository.modifyInventory(bookId,inventory);
-
+    if (inventory > 0) {
+      bookRepository.modifyInventory(bookId, inventory);
+    }
+    deleteBookCache(bookId);
   }
 
   @Override
   public PageInfo<Book> getBooksByPage(Integer num) {
-    List<Book> books=bookRepository.getBooks();
+    List<Book> books = getBooks();
 
-        PageInfo<Book> pageInfo = PageHelper
+    PageInfo<Book> pageInfo = PageHelper
         .startPage(num, 5)
-        .doSelectPageInfo(() -> bookRepository.getBooks());
-        
-        List<Book> result=new ArrayList<>();
-        int st=Math.max((num-1)*5,0);
-        int en=Math.min(books.size()-1,num*5-1);
-        for(int i=st;i<=en;i++)
-        {
-          result.add(books.get(i));
-        }
+        .doSelectPageInfo(() -> getBooks());
 
-        pageInfo.setList(result);
-        pageInfo.setTotal(books.size());
+    List<Book> result = new ArrayList<>();
+    int st = Math.max((num - 1) * 5, 0);
+    int en = Math.min(books.size() - 1, num * 5 - 1);
+    for (int i = st; i <= en; i++) {
+      result.add(books.get(i));
+    }
+
+    pageInfo.setList(result);
+    pageInfo.setTotal(books.size());
     return pageInfo;
 
   }
 
+  @Override
+  public void deleteBookCache(Integer bookId) {
+    redisUtil.del("homeContent");
+    log.info("HomeContent has been deleted from Redis.");
+
+    redisUtil.del("bookList");
+    log.info("BookList has been deleted from Redis.");
+
+//    redisUtil.delHead("book-");
+//    log.info("Book detail has been deleted from Redis.");
+
+    if (bookId != -1) {
+      redisUtil.del("book-" + bookId);
+      log.info("Book-" + bookId + " has been deleted from Redis.");
+    }
+  }
 
 }

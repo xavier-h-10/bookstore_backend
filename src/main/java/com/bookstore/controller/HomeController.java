@@ -40,6 +40,5 @@ public class HomeController {
         JSONObject object = new JSONObject();
         object.put("total", res);
         return MessageUtil.createMessage(200, "成功访问页面", object);
-
     }
 }

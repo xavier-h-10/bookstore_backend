@@ -21,4 +21,6 @@ public interface BookDao {
   void updateBook(Map<String,String> params);
 
   PageInfo<Book> getBooksByPage(Integer num);
+
+  void deleteBookCache(Integer bookId);
 }
