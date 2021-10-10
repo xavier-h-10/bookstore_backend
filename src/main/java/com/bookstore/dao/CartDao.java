@@ -29,4 +29,6 @@ public interface CartDao {
 
   void updateBookInventory(Integer userId, List<CartItem> myItem);
 
+  void deleteOrderCache(Integer userId);
+
 }

@@ -56,11 +56,12 @@ public class CartServiceImpl implements CartService {
 //  @Transactional(propagation = Propagation.MANDATORY, isolation = Isolation.READ_COMMITTED)
   public void submitCart(Integer userId) {
     //为了测试事务属性，此处改为四步下单
-//    cartDao.submitCart(userId);
-    List<CartItem> myItem = cartDao.addOrder(userId);
-    cartDao.addOrderItem(userId);
-    cartDao.deleteCart(userId);
-    cartDao.updateBookInventory(userId, myItem);
+//    List<CartItem> myItem = cartDao.addOrder(userId);
+//    cartDao.addOrderItem(userId);
+//    cartDao.deleteCart(userId);
+//    cartDao.updateBookInventory(userId, myItem);
+
+    cartDao.submitCart(userId);
   }
 
 }

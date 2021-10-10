@@ -8,6 +8,7 @@ import com.bookstore.repository.BookRepository;
 import com.bookstore.repository.CartRepository;
 import com.bookstore.repository.OrderRepository;
 import com.bookstore.repository.OrderItemRepository;
+import com.bookstore.utils.redisUtils.RedisUtil;
 import com.bookstore.utils.sessionUtils.SessionUtil;
 import java.beans.Transient;
 import java.math.BigDecimal;
@@ -35,6 +36,8 @@ public class CartDaoImpl implements CartDao {
   OrderRepository orderRepository;
   OrderItemRepository orderItemRepository;
 
+  RedisUtil redisUtil;
+
   @Autowired
   void setCartRepository(CartRepository cartRepository) {
     this.cartRepository = cartRepository;
@@ -43,6 +46,11 @@ public class CartDaoImpl implements CartDao {
   @Autowired
   void setBookRepository(BookRepository bookRepository) {
     this.bookRepository = bookRepository;
+  }
+
+  @Autowired
+  void setRedisUtil(RedisUtil redisUtil) {
+    this.redisUtil = redisUtil;
   }
 
   @Autowired
@@ -118,6 +126,7 @@ public class CartDaoImpl implements CartDao {
     if (userId == null) {
       return;
     }
+    deleteOrderCache(userId);
     Timestamp nowDate = new Timestamp(new Date().getTime());
     System.out.println("date: " + nowDate);
     List<CartItem> myCart = cartRepository.getRealCartItems(userId);
@@ -161,6 +170,7 @@ public class CartDaoImpl implements CartDao {
     if (userId == null) {
       return null;
     }
+    deleteOrderCache(userId);
     Timestamp nowDate = new Timestamp(new Date().getTime());
     List<CartItem> myCart = cartRepository.getRealCartItems(userId);
     //订单项为空时不应该加订单
@@ -229,5 +239,18 @@ public class CartDaoImpl implements CartDao {
           myBook.getInventory() - myItem.getAmount());
     }
     log.info("updateBookInventory dao completed.");
+  }
+
+
+  //下订单时应该将原来的订单缓存删除
+  @Override
+  public void deleteOrderCache(Integer userId) {
+    String key1 = "order-" + userId;
+    String key2 = "allOrder";
+    redisUtil.del(key1);
+    log.info(key1 + " has been deleted from Redis.");
+
+    redisUtil.del(key2);
+    log.info(key2 + " has been deleted from Redis.");
   }
 }

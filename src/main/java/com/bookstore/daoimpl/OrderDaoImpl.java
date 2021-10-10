@@ -1,5 +1,7 @@
 package com.bookstore.daoimpl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.TypeReference;
 import com.bookstore.dao.OrderDao;
 import com.bookstore.entity.Book;
 import com.bookstore.entity.Order;
@@ -7,6 +9,7 @@ import com.bookstore.entity.OrderItem;
 import com.bookstore.entity.OrderStat;
 import com.bookstore.repository.BookRepository;
 import com.bookstore.repository.OrderRepository;
+import com.bookstore.utils.redisUtils.RedisUtil;
 import com.bookstore.utils.sessionUtils.SessionUtil;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -17,16 +20,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
+@Slf4j
 public class OrderDaoImpl implements OrderDao {
 
   OrderRepository orderRepository;
   BookRepository bookRepository;
+  RedisUtil redisUtil;
 
   @Autowired
   void setOrderRepository(OrderRepository orderRepository) {
@@ -38,25 +44,67 @@ public class OrderDaoImpl implements OrderDao {
     this.bookRepository = bookRepository;
   }
 
+  @Autowired
+  void setRedisUtil(RedisUtil redisUtil) {
+    this.redisUtil = redisUtil;
+  }
+
   @Override
   public List<Order> getOrder() {
     Integer userId = SessionUtil.getUserId();
     if (userId == null) {
       return null;
     }
-    List<Order> res = orderRepository.getOrderByUserId(userId);
-    System.out.println("getorder dao:" + res);
+    String key = "order-" + userId;
+    Object p = redisUtil.get(key);
+    List<Order> res = null;
+    if (p == null) {
+      log.info("Get " + key + " from database.");
+      res = orderRepository.getOrderByUserId(userId);
+      redisUtil.set(key, JSONArray.toJSON(res));
+      redisUtil.expire(key, 600);
+    } else {
+      log.info("Get " + key + " from Redis.");
+      res = JSONArray.parseObject(p.toString(), new TypeReference<List<Order>>() {
+      });
+    }
     return res;
   }
 
   @Override
   public Order getOrderByOrderId(Integer orderId) {
-    return orderRepository.getOrderByOrderId(orderId);
+    String key = "orderByOrderId-" + orderId;
+    Object p = redisUtil.get(key);
+    Order res = null;
+    if (p == null) {
+      log.info("Get " + key + " from database.");
+      res = orderRepository.getOrderByOrderId(orderId);
+      redisUtil.set(key, JSONArray.toJSON(res));
+      redisUtil.expire(key, 600);
+    } else {
+      log.info("Get " + key + " from Redis.");
+      res = JSONArray.parseObject(p.toString(), new TypeReference<Order>() {
+      });
+    }
+    return res;
   }
 
   @Override
   public List<Order> getAllOrder() {
-    return orderRepository.getAllOrder();
+    String key = "allOrder";
+    Object p = redisUtil.get(key);
+    List<Order> res = null;
+    if (p == null) {
+      log.info("Get " + key + " from database.");
+      res = orderRepository.getAllOrder();
+      redisUtil.set(key, JSONArray.toJSON(res));
+      redisUtil.expire(key, 600);
+    } else {
+      log.info("Get " + key + " from Redis.");
+      res = JSONArray.parseObject(p.toString(), new TypeReference<List<Order>>() {
+      });
+    }
+    return res;
   }
 
   @Override

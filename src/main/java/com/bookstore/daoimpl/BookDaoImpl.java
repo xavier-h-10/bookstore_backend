@@ -38,12 +38,14 @@ public class BookDaoImpl implements BookDao {
 
   @Override
   public List<Book> getBooks() {
-    Object p = redisUtil.get("bookList");
+    String key = "bookList";
+    Object p = redisUtil.get(key);
     List<Book> res = null;
     if (p == null) {
       log.info("Get bookList from database.");
       res = bookRepository.getBooks();
-      redisUtil.set("bookList", JSONArray.toJSON(res));
+      redisUtil.set(key, JSONArray.toJSON(res));
+      redisUtil.expire(key, 600);
     } else {
       log.info("Get bookList from Redis.");
       res = JSONArray.parseObject(p.toString(), new TypeReference<List<Book>>() {
@@ -54,14 +56,17 @@ public class BookDaoImpl implements BookDao {
 
   @Override
   public Book getBookByBookId(Integer bookId) {
-    Object p = redisUtil.get("book-" + bookId);
+    String key = "book-" + bookId;
+    Object p = redisUtil.get(key);
     Book res = null;
     if (p == null) {
-      log.info("Get book-" + bookId + " from database.");
+      log.info("Get " + key + " from database.");
       res = bookRepository.getBookByBookId(bookId);
-      redisUtil.set("book-" + bookId, JSONArray.toJSON(res));
+      redisUtil.set(key, JSONArray.toJSON(res));
+      //书籍的详情信息可能更新较频繁，因此过期时间设置较小
+      redisUtil.expire(key, 60);
     } else {
-      log.info("Get book-" + bookId + " from Redis.");
+      log.info("Get " + key + " from Redis.");
       res = JSONArray.parseObject(p.toString(), new TypeReference<Book>() {
       });
     }

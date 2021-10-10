@@ -33,12 +33,15 @@ public class HomeDaoImpl implements HomeDao {
   @Override
   public List<HomeItem> getHomeContent() {
     System.out.println("homepage dao executed");
-    Object p = redisUtil.get("homeContent");
+    String key="homeContent";
+    Object p = redisUtil.get(key);
     List<HomeItem> res = null;
     if (p == null) {
       log.info("Get homeContent from database.");
       res = homeRepository.getHomeContent();
-      redisUtil.set("homeContent", JSONArray.toJSON(res));
+      redisUtil.set(key, JSONArray.toJSON(res));
+      //首页内容更新不频繁,因此设置半小时的过期时间
+      redisUtil.expire(key,1800);
     } else {
       log.info("Get homeContent from Redis.");
       res = JSONArray.parseObject(p.toString(), new TypeReference<List<HomeItem>>() {
