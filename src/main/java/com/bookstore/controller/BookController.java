@@ -87,11 +87,13 @@ public class BookController {
     List<Map<String, String>> list = new ArrayList<>();
     for (int i = 0; i < len; i++) {
       Integer bookId = res.get(i).getBookId();
+      String name = res.get(i).getName();
       String description = res.get(i).getDescription();
-      log.info(bookId + "," + description);
+      log.info(bookId + "," + name + "," + description);
       Map<String, String> map = new HashMap<>();
       map.clear();
       map.put("id", String.valueOf(bookId));
+      map.put("name", String.valueOf(name));
       map.put("info", description);
       list.add(map);
     }
