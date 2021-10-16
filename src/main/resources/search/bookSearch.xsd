@@ -4,7 +4,7 @@
   <xs:element name="bookSearchRequest">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="name" type="xs:string"/>
+        <xs:element name="keyword" type="xs:string"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -12,7 +12,7 @@
   <xs:element name="bookSearchResponse">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="booklist" type="tns:bookInfo"/>
+        <xs:element name="booklist" type="tns:bookInfo" minOccurs="1" maxOccurs="unbounded"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>

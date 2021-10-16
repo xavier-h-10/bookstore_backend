@@ -6,7 +6,7 @@
 //
 
 
-package com.bookstore.webservice;
+package com.bookstore.webservice_client.webservice;
 
 import javax.xml.bind.annotation.XmlRegistry;
 

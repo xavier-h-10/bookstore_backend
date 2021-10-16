@@ -22,13 +22,16 @@ public class SolrSearching {
     SolrClient client = SolrUtil.getSolrClient();
     final Map<String, String> queryParamMap = new HashMap<String, String>();
 
-    queryParamMap.put("q", "description:" + keyword);
+    queryParamMap.put("q", "description:\"" + keyword + "\""); //中文搜索一定要用双引号包裹
     queryParamMap.put("fl", "id, description, name");
     queryParamMap.put("sort", "id asc");
+//    queryParamMap.put("hl.fl","description");  //设置高亮
+//    queryParamMap.put("hl.simple.pre","<em>");
+//    queryParamMap.put("hl.simple.post","</em>");
     MapSolrParams queryParams = new MapSolrParams(queryParamMap);
     List<BookInfo> res = new ArrayList<>();
     try {
-      final QueryResponse response = client.query("book_collection", queryParams);
+      final QueryResponse response = client.query(queryParams);
       final SolrDocumentList documents = response.getResults();
       log.info("Found " + documents.getNumFound() + " documents");
       for (SolrDocument document : documents) {

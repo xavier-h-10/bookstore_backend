@@ -1,4 +1,6 @@
 //中文分词器配置 https://blog.csdn.net/weixin_40787926/article/details/89487114
+//https://blog.csdn.net/huangliuyu00/article/details/79491513
+//分别采用solr自带的中文分词器,以及IK Analyzer,均已通过测试
 package com.bookstore.search;
 
 
