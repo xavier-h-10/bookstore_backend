@@ -2,6 +2,8 @@ package com.bookstore.serviceimpl;
 
 import com.bookstore.dao.BookDao;
 import com.bookstore.entity.Book;
+import com.bookstore.entity.BookInfo;
+import com.bookstore.search.SolrSearching;
 import com.bookstore.service.BookService;
 import com.github.pagehelper.PageInfo;
 import java.util.Map;
@@ -55,4 +57,8 @@ public class BookServiceImpl implements BookService {
     return bookDao.getBooksByPage(num);
   }
 
+  @Override
+  public List<BookInfo> getBooksByKeyword(String keyword) {
+    return SolrSearching.getBooksByKeyword(keyword);
+  }
 }

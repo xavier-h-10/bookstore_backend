@@ -3,7 +3,9 @@ package com.bookstore.controller;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONWriter;
 import com.bookstore.entity.Book;
+import com.bookstore.entity.BookInfo;
 import com.bookstore.entity.UserAuth;
+import com.bookstore.search.SolrIndexing;
 import com.bookstore.service.BookService;
 import com.bookstore.utils.messageUtils.Message;
 import com.bookstore.utils.messageUtils.MessageUtil;
@@ -18,6 +20,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -94,10 +97,17 @@ public class BookController {
       map.clear();
       map.put("id", String.valueOf(bookId));
       map.put("name", String.valueOf(name));
-      map.put("info", description);
+      map.put("description", description);
       list.add(map);
     }
     jsonArray = JSONArray.parseArray(JSON.toJSONString(list));
     return jsonArray;
   }
+
+  //全文搜索api
+  @RequestMapping("/getBooksByKeyword")
+  public List<BookInfo> getBooksByKeyword(@RequestParam("keyword") String keyword) {
+    return bookService.getBooksByKeyword(keyword);
+  }
+
 }

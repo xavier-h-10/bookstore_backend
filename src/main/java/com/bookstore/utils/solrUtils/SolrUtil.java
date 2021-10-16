@@ -1,16 +1,11 @@
-package com.bookstore.config;
-
+package com.bookstore.utils.solrUtils;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
-public class SolrConfig {
+public class SolrUtil {
 
-  @Bean
-  public SolrClient solrClient() {
+  public static SolrClient getSolrClient() {
     final String solrUrl = "http://localhost:8983/solr/book_collection";
     return new HttpSolrClient.Builder(solrUrl)
         .withConnectionTimeout(10000)
