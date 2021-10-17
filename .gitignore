@@ -5,3 +5,4 @@
 *.jar
 webservice_client/.mvn/wrapper/maven-wrapper.jar
 webservice_client/.mvn/wrapper/MavenWrapperDownloader.java
+/webservice_client/.mvn/wrapper/maven-wrapper.jar
