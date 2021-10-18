@@ -6,6 +6,7 @@ import com.bookstore.entity.Book;
 import com.bookstore.entity.BookInfo;
 import com.bookstore.entity.UserAuth;
 import com.bookstore.search.SolrIndexing;
+import com.bookstore.service.BookMicroservice;
 import com.bookstore.service.BookService;
 import com.bookstore.utils.messageUtils.Message;
 import com.bookstore.utils.messageUtils.MessageUtil;
@@ -22,7 +23,6 @@ import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,9 +37,16 @@ public class BookController {
 
   BookService bookService;
 
+  BookMicroservice bookMicroservice;
+
   @Autowired
   void setBookService(BookService bookService) {
     this.bookService = bookService;
+  }
+
+  @Autowired
+  void setBookMicroservice(BookMicroservice bookMicroservice) {
+    this.bookMicroservice = bookMicroservice;
   }
 
   @RequestMapping("/getBookById")
@@ -108,6 +115,13 @@ public class BookController {
   @RequestMapping("/getBooksByKeyword")
   public List<BookInfo> getBooksByKeyword(@RequestParam("keyword") String keyword) {
     return bookService.getBooksByKeyword(keyword);
+  }
+
+  //微服务互相调用
+  @RequestMapping("/findAuthorByBookName")
+  public String findAuthorByBookName(@RequestParam("bookName") String bookName) {
+    log.info("bookstore: findAuthorByBookName called bookName={}", bookName);
+    return bookMicroservice.findAuthorByBookName(bookName);
   }
 
 }
