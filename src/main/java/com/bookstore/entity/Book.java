@@ -13,12 +13,14 @@ import lombok.Data;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
 @Table(name = "book")
 @JsonIgnoreProperties(value = {"handler", "hibernateLazyInitializer", "fieldHandler"})
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "bookId")
+@NoArgsConstructor
 public class Book {
 
   @Id
