@@ -30,8 +30,8 @@ public interface BookRepository extends JpaRepository<Book, Integer>  {
   void deleteBookByBookId(Integer book_id);
 
   @Modifying
-  @Query(value="insert into `book`(name,author,price,isbn,inventory,description,image,type,brief,enabled) values(?1,?2,?3,?4,?5,?6,?7,?8,?9,1)",nativeQuery = true)
-  void addBook(String name,String Author,BigDecimal Price,String ISBN,Integer Inventory,String Description,String Image,String Type,String Brief);
+  @Query(value="insert into `book`(name,author,price,isbn,inventory,type,brief,enabled) values(?1,?2,?3,?4,?5,?6,?7,?8,?9,1)",nativeQuery = true)
+  void addBook(String name,String Author,BigDecimal Price,String ISBN,Integer Inventory,String Type,String Brief);
 
   @Query(value="select * from `book` where `name` like ?1 and `enabled`=true",nativeQuery = true)
   List<Book> getBookByName(String name);

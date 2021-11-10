@@ -37,8 +37,9 @@ public class HomeDaoImpl implements HomeDao {
     Object p = redisUtil.get(key);
     List<HomeItem> res = null;
     if (p == null) {
-      log.info("Get homeContent from database.");
-      res = homeRepository.getHomeContent();
+      log.info("Get homeContent from mongodb.");
+
+      res = homeRepository.findAll();
       redisUtil.set(key, JSONArray.toJSON(res));
       //首页内容更新不频繁,因此设置半小时的过期时间
       redisUtil.expire(key,1800);

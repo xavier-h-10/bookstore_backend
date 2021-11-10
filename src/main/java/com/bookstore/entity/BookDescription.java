@@ -1,15 +1,15 @@
 package com.bookstore.entity;
 
 import lombok.Data;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@Document(collection = "home_item")
-public class HomeItem {
-  @Id
-  private Integer imageId;
+@Document(collection = "book_description")
+public class BookDescription {
 
-  private String image;
+  @Id
+  private Integer id;
+
+  private String description;
 }

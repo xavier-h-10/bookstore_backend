@@ -4,7 +4,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.TypeReference;
 import com.bookstore.dao.BookDao;
 import com.bookstore.entity.Book;
+import com.bookstore.entity.BookDescription;
+import com.bookstore.entity.BookImage;
 import com.bookstore.entity.HomeItem;
+import com.bookstore.repository.BookDescriptionRepository;
+import com.bookstore.repository.BookImageRepository;
 import com.bookstore.repository.BookRepository;
 import com.bookstore.utils.redisUtils.RedisUtil;
 import com.github.pagehelper.PageHelper;
@@ -12,7 +16,9 @@ import com.github.pagehelper.PageInfo;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import javax.swing.text.html.Option;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -24,6 +30,11 @@ import java.util.List;
 public class BookDaoImpl implements BookDao {
 
   BookRepository bookRepository;
+
+  BookImageRepository bookImageRepository;
+
+  BookDescriptionRepository bookDescriptionRepository;
+
   RedisUtil redisUtil;
 
   @Autowired
@@ -36,6 +47,16 @@ public class BookDaoImpl implements BookDao {
     this.redisUtil = redisUtil;
   }
 
+  @Autowired
+  void setBookImageRepository(BookImageRepository bookImageRepository) {
+    this.bookImageRepository = bookImageRepository;
+  }
+
+  @Autowired
+  void setBookDescriptionRepository(BookDescriptionRepository bookDescriptionRepository) {
+    this.bookDescriptionRepository = bookDescriptionRepository;
+  }
+
   @Override
   public List<Book> getBooks() {
     String key = "bookList";
@@ -44,6 +65,14 @@ public class BookDaoImpl implements BookDao {
     if (p == null) {
       log.info("Get bookList from database.");
       res = bookRepository.getBooks();
+      int size = res.size();
+      for (int i = 0; i < size; i++) {
+        int id = res.get(i).getBookId();
+        String image = getBookImageById(id);
+        String description = getBookDescriptionById(id);
+        res.get(i).setImage(image);
+        res.get(i).setDescription(description);
+      }
       redisUtil.set(key, JSONArray.toJSON(res));
       redisUtil.expire(key, 600);
     } else {
@@ -62,6 +91,10 @@ public class BookDaoImpl implements BookDao {
     if (p == null) {
       log.info("Get " + key + " from database.");
       res = bookRepository.getBookByBookId(bookId);
+      String image = getBookImageById(bookId);
+      String description = getBookDescriptionById(bookId);
+      res.setImage(image);
+      res.setDescription(description);
       redisUtil.set(key, JSONArray.toJSON(res));
       //书籍的详情信息可能更新较频繁，因此过期时间设置较小
       redisUtil.expire(key, 60);
@@ -104,7 +137,17 @@ public class BookDaoImpl implements BookDao {
     }
     Integer inventory = new Integer(params.get("inventory"));
 
-    bookRepository.addBook(name, author, price, isbn, inventory, description, image, type, brief);
+//    bookRepository.addBook(name, author, price, isbn, inventory, type, brief);
+
+    Book book = new Book(name, author, price, isbn, inventory, type, brief);
+    Book returnedBook = bookRepository.save(book);
+    if (returnedBook.getBookId() == null || returnedBook.getBookId() <= 0) {
+      log.error("addBook: returnedBook has null id.");
+    } else {
+      Integer id = returnedBook.getBookId();
+      setBookDescriptionById(id, description);
+      setBookImageById(id, image);
+    }
     deleteBookCache(-1);
   }
 
@@ -137,12 +180,14 @@ public class BookDaoImpl implements BookDao {
 
     String description = params.get("description");
     if (description != null) {
-      bookRepository.modifyDescription(bookId, description);
+//      bookRepository.modifyDescription(bookId, description);
+      setBookDescriptionById(bookId, description);
     }
 
     String image = params.get("image");
     if (image != null) {
-      bookRepository.modifyImage(bookId, image);
+      //bookRepository.modifyImage(bookId, image);
+      setBookImageById(bookId, image);
     }
 
     String type = params.get("type");
@@ -180,6 +225,11 @@ public class BookDaoImpl implements BookDao {
     int st = Math.max((num - 1) * 5, 0);
     int en = Math.min(books.size() - 1, num * 5 - 1);
     for (int i = st; i <= en; i++) {
+      Integer id=books.get(i).getBookId();
+      String image = getBookImageById(id);
+      String description = getBookDescriptionById(id);
+      books.get(i).setImage(image);
+      books.get(i).setDescription(description);
       result.add(books.get(i));
     }
 
@@ -204,6 +254,42 @@ public class BookDaoImpl implements BookDao {
       redisUtil.del("book-" + bookId);
       log.info("Book-" + bookId + " has been deleted from Redis.");
     }
+  }
+
+  @Override
+  public String getBookImageById(Integer bookId) {
+    Optional<BookImage> image = bookImageRepository.findById(bookId);
+    if (image.isPresent()) {
+      return image.get().getImage();
+    } else {
+      return "";
+    }
+  }
+
+  @Override
+  public String getBookDescriptionById(Integer bookId) {
+    Optional<BookDescription> description = bookDescriptionRepository.findById(bookId);
+    if (description.isPresent()) {
+      return description.get().getDescription();
+    } else {
+      return "";
+    }
+  }
+
+  @Override
+  public void setBookImageById(Integer bookId, String str) {
+    log.info("set BookImage to mongodb called, bookId=", bookId);
+    BookImage bookImage = bookImageRepository.findById(bookId).get();
+    bookImage.setImage(str);
+    bookImageRepository.save(bookImage); //有id则修改，无id则变成添加操作
+  }
+
+  @Override
+  public void setBookDescriptionById(Integer bookId, String str) {
+    log.info("set BookDescription to mongodb called, bookId=", bookId);
+    BookDescription bookDescription = bookDescriptionRepository.findById(bookId).get();
+    bookDescription.setDescription(str);
+    bookDescriptionRepository.save(bookDescription);
   }
 
 }

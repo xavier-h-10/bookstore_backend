@@ -18,9 +18,20 @@ public interface BookDao {
 
   List<Book> getBookByName(String name);
 
-  void updateBook(Map<String,String> params);
+  void updateBook(Map<String, String> params);
 
   PageInfo<Book> getBooksByPage(Integer num);
 
   void deleteBookCache(Integer bookId);
+
+  /* 操作mongoDB数据 */
+  String getBookImageById(Integer bookId);
+
+  String getBookDescriptionById(Integer bookId);
+
+  void setBookImageById(Integer bookId, String str);
+
+  void setBookDescriptionById(Integer bookId, String str);
+
+
 }
