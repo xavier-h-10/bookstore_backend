@@ -1,15 +1,19 @@
 package com.bookstore.daoimpl;
 
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.bookstore.dao.BookDao;
 import com.bookstore.entity.Book;
 import com.bookstore.entity.BookDescription;
 import com.bookstore.entity.BookImage;
-import com.bookstore.entity.HomeItem;
+import com.bookstore.entity.BookNode;
+import com.bookstore.entity.BookTag;
 import com.bookstore.repository.BookDescriptionRepository;
 import com.bookstore.repository.BookImageRepository;
+import com.bookstore.repository.BookNodeRepository;
 import com.bookstore.repository.BookRepository;
+import com.bookstore.repository.BookTagRepository;
 import com.bookstore.utils.redisUtils.RedisUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -17,8 +21,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import javax.swing.text.html.Option;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -34,6 +36,10 @@ public class BookDaoImpl implements BookDao {
   BookImageRepository bookImageRepository;
 
   BookDescriptionRepository bookDescriptionRepository;
+
+  BookNodeRepository bookNodeRepository;
+
+  BookTagRepository bookTagRepository;
 
   RedisUtil redisUtil;
 
@@ -56,6 +62,17 @@ public class BookDaoImpl implements BookDao {
   void setBookDescriptionRepository(BookDescriptionRepository bookDescriptionRepository) {
     this.bookDescriptionRepository = bookDescriptionRepository;
   }
+
+  @Autowired
+  void setBookNodeRepository(BookNodeRepository bookNodeRepository) {
+    this.bookNodeRepository = bookNodeRepository;
+  }
+
+  @Autowired
+  void setBookTagRepository(BookTagRepository bookTagRepository) {
+    this.bookTagRepository = bookTagRepository;
+  }
+
 
   @Override
   public List<Book> getBooks() {
@@ -225,7 +242,7 @@ public class BookDaoImpl implements BookDao {
     int st = Math.max((num - 1) * 5, 0);
     int en = Math.min(books.size() - 1, num * 5 - 1);
     for (int i = st; i <= en; i++) {
-      Integer id=books.get(i).getBookId();
+      Integer id = books.get(i).getBookId();
       String image = getBookImageById(id);
       String description = getBookDescriptionById(id);
       books.get(i).setImage(image);
@@ -290,6 +307,27 @@ public class BookDaoImpl implements BookDao {
     BookDescription bookDescription = bookDescriptionRepository.findById(bookId).get();
     bookDescription.setDescription(str);
     bookDescriptionRepository.save(bookDescription);
+  }
+
+  @Override
+  public List<BookTag> getBookTags() {
+    return bookTagRepository.findAll();
+  }
+
+  @Override
+  public JSONObject findRelatedBooksByTags(String tagId) {
+    List<BookTag> tags = bookTagRepository.findRelatedTags(tagId); //用户需要知道为什么搜索到这些书,因此返回标签
+    List<BookNode> bookNodes = bookNodeRepository.findRelatedBooks(tagId);
+    JSONObject res = new JSONObject();
+    res.put("tags", tags);
+
+    List<Book> books = new ArrayList<>();
+    for (BookNode node : bookNodes) {
+      Integer bookId = Integer.valueOf(node.getBookId());
+      books.add(getBookByBookId(bookId));  //从mySQL中搜索书并返回
+    }
+    res.put("books", books);
+    return res;
   }
 
 }

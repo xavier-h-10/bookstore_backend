@@ -1,10 +1,14 @@
 package com.bookstore.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONWriter;
 import com.bookstore.entity.Book;
 import com.bookstore.entity.BookInfo;
+import com.bookstore.entity.BookNode;
+import com.bookstore.entity.BookTag;
 import com.bookstore.entity.UserAuth;
+import com.bookstore.repository.BookNodeRepository;
 import com.bookstore.search.SolrIndexing;
 import com.bookstore.service.BookMicroservice;
 import com.bookstore.service.BookService;
@@ -120,8 +124,32 @@ public class BookController {
   //微服务互相调用
   @RequestMapping("/findAuthorByBookName")
   public String findAuthorByBookName(@RequestParam("bookName") String bookName) {
-    log.info("bookstore: findAuthorByBookName called bookName={}", bookName);
+    log.info("bookController: findAuthorByBookName called bookName={}", bookName);
     return bookMicroservice.findAuthorByBookName(bookName);
   }
 
+  @Autowired
+  BookNodeRepository bookNodeRepository;
+
+  @RequestMapping("/findBookNodeByName")
+  public void findBookNodeByName(@RequestParam("bookName")String bookName) {
+    log.info("bookController: findAuthorByBookName called bookName={}", bookName);
+    BookNode node=bookNodeRepository.findBookNodeByName(bookName);
+    if(node!=null) {
+      log.info("find node!");
+      for(BookTag p: node.neighbors) {
+        log.info("tag="+p.getName());
+      }
+    }
+  }
+
+  @RequestMapping("/getBookTags")
+  public List<BookTag> getBookTags() {
+    return bookService.getBookTags();
+  }
+
+  @RequestMapping("/findRelatedBooksByTag")
+  public JSONObject findRelatedBooksByTags(@RequestParam("tagId") String tagId) {
+    return bookService.findRelatedBooksByTags(tagId);
+  }
 }

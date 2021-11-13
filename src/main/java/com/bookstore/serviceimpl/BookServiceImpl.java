@@ -1,8 +1,10 @@
 package com.bookstore.serviceimpl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.bookstore.dao.BookDao;
 import com.bookstore.entity.Book;
 import com.bookstore.entity.BookInfo;
+import com.bookstore.entity.BookTag;
 import com.bookstore.search.SolrSearching;
 import com.bookstore.service.BookService;
 import com.github.pagehelper.PageInfo;
@@ -60,5 +62,15 @@ public class BookServiceImpl implements BookService {
   @Override
   public List<BookInfo> getBooksByKeyword(String keyword) {
     return SolrSearching.getBooksByKeyword(keyword);
+  }
+
+  @Override
+  public List<BookTag> getBookTags() {
+    return bookDao.getBookTags();
+  }
+
+  @Override
+  public JSONObject findRelatedBooksByTags(String tagId) {
+    return bookDao.findRelatedBooksByTags(tagId);
   }
 }

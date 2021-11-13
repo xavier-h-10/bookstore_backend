@@ -1,7 +1,10 @@
 package com.bookstore.dao;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.bookstore.entity.Book;
 
+import com.bookstore.entity.BookTag;
 import com.github.pagehelper.PageInfo;
 import java.util.List;
 import java.util.Map;
@@ -33,5 +36,7 @@ public interface BookDao {
 
   void setBookDescriptionById(Integer bookId, String str);
 
+  List<BookTag> getBookTags();
 
+  JSONObject findRelatedBooksByTags(String tagId);
 }
