@@ -128,21 +128,6 @@ public class BookController {
     return bookMicroservice.findAuthorByBookName(bookName);
   }
 
-  @Autowired
-  BookNodeRepository bookNodeRepository;
-
-  @RequestMapping("/findBookNodeByName")
-  public void findBookNodeByName(@RequestParam("bookName")String bookName) {
-    log.info("bookController: findAuthorByBookName called bookName={}", bookName);
-    BookNode node=bookNodeRepository.findBookNodeByName(bookName);
-    if(node!=null) {
-      log.info("find node!");
-      for(BookTag p: node.neighbors) {
-        log.info("tag="+p.getName());
-      }
-    }
-  }
-
   @RequestMapping("/getBookTags")
   public List<BookTag> getBookTags() {
     return bookService.getBookTags();
@@ -152,4 +137,10 @@ public class BookController {
   public JSONObject findRelatedBooksByTags(@RequestParam("tagId") String tagId) {
     return bookService.findRelatedBooksByTags(tagId);
   }
+
+  @RequestMapping("/getBookTagsById")
+  public List<BookTag> getBookTagsById(@RequestParam("bookId") String bookId) {
+    return bookService.getBookTagsById(bookId);
+  }
+
 }

@@ -330,4 +330,8 @@ public class BookDaoImpl implements BookDao {
     return res;
   }
 
+  @Override
+  public List<BookTag> getBookTagsById(String bookId) {
+    return bookTagRepository.getBookTagsById(bookId);
+  }
 }

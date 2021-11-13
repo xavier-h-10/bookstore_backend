@@ -36,7 +36,8 @@ public class InterceptorConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/getBooksByKeyword")
                 .excludePathPatterns("/findAuthorByBookName")
                 .excludePathPatterns("/getBookTags")
-                .excludePathPatterns("/findRelatedBooksByTag");
+                .excludePathPatterns("/findRelatedBooksByTag")
+                .excludePathPatterns("/getBookTagsById");
     }
 
 

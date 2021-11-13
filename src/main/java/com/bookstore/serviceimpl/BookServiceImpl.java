@@ -73,4 +73,9 @@ public class BookServiceImpl implements BookService {
   public JSONObject findRelatedBooksByTags(String tagId) {
     return bookDao.findRelatedBooksByTags(tagId);
   }
+
+  @Override
+  public List<BookTag> getBookTagsById(String bookId) {
+    return bookDao.getBookTagsById(bookId);
+  }
 }
