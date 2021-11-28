@@ -12,9 +12,11 @@ public interface BookTagRepository extends Neo4jRepository<BookTag, Long> {
 
   List<BookTag> findAll();
 
-  @Query(value = "match (na:tag{tagId:$tagId})--()-->(nb:tag) return na,nb")
-  List<BookTag> findRelatedTags(@Param("tagId") String tagId);
+  @Query(value = "match (na:tag)--()-->(nb:tag) where na.tagId in $tags return na,nb")
+  List<BookTag> findRelatedTags(@Param("tags") List<String> tags);
 
   @Query(value = "match (na:book{bookId:$bookId})-->(nb:tag) return nb")
   List<BookTag> getBookTagsById(@Param("bookId") String bookId);
+
+
 }

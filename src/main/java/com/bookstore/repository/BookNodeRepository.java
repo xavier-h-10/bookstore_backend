@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 public interface BookNodeRepository extends Neo4jRepository<BookNode, Long> {
   BookNode findBookNodeByName(String name);
 
-  @Query(value="match (na:tag{tagId:$tagId})--()-->(nb:tag) match (nc:book)-->(nd:tag) where nd=na or nd=nb return nc;")
-  List<BookNode> findRelatedBooks(@Param("tagId") String tagId);
+  @Query(value="match (na:tag)--()-->(nb:tag) where na.tagId in $tags match (nc:book)-->(nd:tag) where nd=na or nd=nb return distinct nc")
+  List<BookNode> findRelatedBooks(@Param("tags") List<String> tags);
+
+
 }

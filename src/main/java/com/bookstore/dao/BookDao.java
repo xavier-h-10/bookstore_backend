@@ -36,9 +36,10 @@ public interface BookDao {
 
   void setBookDescriptionById(Integer bookId, String str);
 
+  /* 操作neo4j数据 */
   List<BookTag> getBookTags();
 
-  JSONObject findRelatedBooksByTags(String tagId);
+  JSONObject findRelatedBooksByTags(List<String> tagId);
 
   List<BookTag> getBookTagsById(String bookId);
 }

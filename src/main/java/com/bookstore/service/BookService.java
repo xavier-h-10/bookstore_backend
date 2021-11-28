@@ -30,7 +30,7 @@ public interface BookService {
 
   List<BookTag> getBookTags();
 
-  JSONObject findRelatedBooksByTags(String tagId);
+  JSONObject findRelatedBooksByTags(List<String> tagId);
 
   List<BookTag> getBookTagsById(String bookId);
 }

@@ -19,6 +19,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -126,6 +127,8 @@ public class BookDaoImpl implements BookDao {
   @Override
   public void deleteBookByBookId(Integer bookId) {
     bookRepository.deleteBookByBookId(bookId);
+    bookImageRepository.deleteBookImagesByBookId(bookId);
+    bookDescriptionRepository.deleteBookDescriptionsByBookId(bookId);
     deleteBookCache(bookId);
   }
 
@@ -162,7 +165,7 @@ public class BookDaoImpl implements BookDao {
       log.error("addBook: returnedBook has null id.");
     } else {
       Integer id = returnedBook.getBookId();
-      setBookDescriptionById(id, description);
+      setBookDescriptionById(id, description); //在mongoDB中设置
       setBookImageById(id, image);
     }
     deleteBookCache(-1);
@@ -275,36 +278,43 @@ public class BookDaoImpl implements BookDao {
 
   @Override
   public String getBookImageById(Integer bookId) {
-    Optional<BookImage> image = bookImageRepository.findById(bookId);
-    if (image.isPresent()) {
-      return image.get().getImage();
-    } else {
+    BookImage image = bookImageRepository.findBookImageByBookId(bookId);
+    if (image == null) {
       return "";
+    } else {
+      return image.getImage();
     }
   }
 
   @Override
   public String getBookDescriptionById(Integer bookId) {
-    Optional<BookDescription> description = bookDescriptionRepository.findById(bookId);
-    if (description.isPresent()) {
-      return description.get().getDescription();
-    } else {
+    BookDescription description = bookDescriptionRepository.findBookDescriptionByBookId(bookId);
+    if (description == null) {
       return "";
+    } else {
+      return description.getDescription();
     }
   }
 
   @Override
   public void setBookImageById(Integer bookId, String str) {
     log.info("set BookImage to mongodb called, bookId=", bookId);
-    BookImage bookImage = bookImageRepository.findById(bookId).get();
+    BookImage bookImage = bookImageRepository.findBookImageByBookId(bookId);
+    if (bookImage == null) {
+      bookImage.setBookId(bookId);
+    }
     bookImage.setImage(str);
-    bookImageRepository.save(bookImage); //有id则修改，无id则变成添加操作
+    bookImageRepository.save(bookImage);
   }
 
   @Override
   public void setBookDescriptionById(Integer bookId, String str) {
     log.info("set BookDescription to mongodb called, bookId=", bookId);
-    BookDescription bookDescription = bookDescriptionRepository.findById(bookId).get();
+//    BookDescription bookDescription = bookDescriptionRepository.findById(bookId).get();
+    BookDescription bookDescription = bookDescriptionRepository.findBookDescriptionByBookId(bookId);
+    if (bookDescription == null) {
+      bookDescription.setBookId(bookId);
+    }
     bookDescription.setDescription(str);
     bookDescriptionRepository.save(bookDescription);
   }
@@ -315,11 +325,16 @@ public class BookDaoImpl implements BookDao {
   }
 
   @Override
-  public JSONObject findRelatedBooksByTags(String tagId) {
+  public JSONObject findRelatedBooksByTags(List<String> tagId) {
     List<BookTag> tags = bookTagRepository.findRelatedTags(tagId); //用户需要知道为什么搜索到这些书,因此返回标签
     List<BookNode> bookNodes = bookNodeRepository.findRelatedBooks(tagId);
     JSONObject res = new JSONObject();
     res.put("tags", tags);
+    int size=bookNodes.size();
+
+    for(int i=0;i<size;i++) {
+      log.info("bookNode:"+bookNodes.get(i).getName());
+    }
 
     List<Book> books = new ArrayList<>();
     for (BookNode node : bookNodes) {

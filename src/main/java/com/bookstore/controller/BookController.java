@@ -5,24 +5,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONWriter;
 import com.bookstore.entity.Book;
 import com.bookstore.entity.BookInfo;
-import com.bookstore.entity.BookNode;
 import com.bookstore.entity.BookTag;
-import com.bookstore.entity.UserAuth;
-import com.bookstore.repository.BookNodeRepository;
-import com.bookstore.search.SolrIndexing;
 import com.bookstore.service.BookMicroservice;
 import com.bookstore.service.BookService;
-import com.bookstore.utils.messageUtils.Message;
-import com.bookstore.utils.messageUtils.MessageUtil;
-import com.bookstore.utils.sessionUtils.SessionUtil;
-import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.alibaba.fastjson.JSONArray;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -133,10 +122,12 @@ public class BookController {
     return bookService.getBookTags();
   }
 
-  @RequestMapping("/findRelatedBooksByTag")
-  public JSONObject findRelatedBooksByTags(@RequestParam("tagId") String tagId) {
-    return bookService.findRelatedBooksByTags(tagId);
+  @RequestMapping("/findRelatedBooksByTags")
+  public JSONObject findRelatedBooksByTags(@RequestBody String[] tagId) {
+    List<String> id=Arrays.asList(tagId);
+    return bookService.findRelatedBooksByTags(id);
   }
+
 
   @RequestMapping("/getBookTagsById")
   public List<BookTag> getBookTagsById(@RequestParam("bookId") String bookId) {

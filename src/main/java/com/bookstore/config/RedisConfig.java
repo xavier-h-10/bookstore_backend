@@ -11,11 +11,29 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 
 @Configuration
 @EnableCaching //开启注解
 public class RedisConfig extends CachingConfigurerSupport {
+  @Value("${spring.redis.host}")
+  private String host;
+  @Value("${spring.redis.port}")
+  private int port;
+  @Value("${spring.redis.password}")
+  private String password;
+  @Value("${spring.redis.timeout}")
+  private int timeout;
+
+  @Bean
+  public JedisPool redisPoolFactory() {
+    JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+    return new JedisPool(jedisPoolConfig, host, port, timeout, password);
+  }
 
   @Bean
   public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
